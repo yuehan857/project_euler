@@ -2,58 +2,6 @@ import math
 import numpy as np
 import pandas as pd
 
-# ********************** 100_arranged_probability **********************
-
-def find_arr(start):
-    N = math.floor(start)
-    n = math.floor(0.7 * N)
-    t1 = 0
-    t2 = 0
-    while 2 * n * (n - 1) != N * (N - 1):
-        if 2 * n * (n - 1) < N * (N - 1):
-            n = n + 1
-            t1 = t1 + 1
-        else:
-            N = N + 1
-            t2 = t2 + 1
-
-    t = t1 + t2
-
-    print("iterate", t1, "+", t2, "=", t, "times")
-
-    return N, n
-
-def find_arr2(start):
-    N = 21
-    n = 15
-    t = 0
-    while N < start:
-        N_temp = N
-        n_temp = n
-        N = 4 * n_temp + 3 * N_temp - 3
-        n = 3 * n_temp + 2 * N_temp - 2
-        t = t + 1
-
-    print("iterate", t, "times")
-
-    return N, n
-
-print(find_arr(1e2))
-print(find_arr(1e4))
-print(find_arr(1e6))
-
-print(find_arr2(1e2))
-print(find_arr2(1e4))
-print(find_arr2(1e6))
-
-print(find_arr2(1e12))
-
-# reference: https://www.mathblog.dk/project-euler-100-blue-discs-two-blue/
-
-
-
-
-
 # ********************** 54_poker_hands **********************
 
 hands = pd.read_csv('p054_poker.txt', header = None)
@@ -63,6 +11,15 @@ hands = pd.concat([hands[0].str.split(' ', expand=True)], axis = 1, names = card
 # arrange card
 
 def rep_jqka(val):
+    '''
+    If a hand of cards' value include letter(T, J, Q, K, A), replace the letter value into numeric value
+
+    Args:
+        val : The original value of a set of cards
+
+    Returns:
+        The numeric value of a set of cards
+    '''
     letters = ["T", "J", "Q", "K", "A"]
     v = 9
     for j in letters:
@@ -72,7 +29,17 @@ def rep_jqka(val):
 
     return val
 
-def arrang_card(cards, a_b):
+def arrang_card(cards, a_b = str):
+    '''
+    Extract one player's cards, and arrange them in order, extract the ordered value and suit of the cards
+
+    Args:
+        cards : Two players' 10 cards
+        a_b (str): Indicate player a or player b
+
+    Returns:
+        The ordered value and suit of the designated player's cards
+    '''
     if a_b == "a":
         start = 0
     elif a_b == "b":
@@ -94,6 +61,15 @@ arrang_card(hands[0:1], "a")
 # find pattern
 
 def check_pairs(val):
+    '''
+    Check if one hand of cards include pair(s)
+
+    Args:
+        val : The ordered value of cards
+
+    Returns:
+        The value of pair(s)
+    '''
     pairs = []
     for i in range(2, 15):
         if val.count(i) == 2:
@@ -102,6 +78,15 @@ def check_pairs(val):
     return sorted(pairs)
 
 def check_three(val):
+    '''
+    Check if one hand of cards include three
+
+    Args:
+        val : The ordered value of cards
+
+    Returns:
+        The value of three
+    '''
     three = 0
     for i in range(2, 15):
         if val.count(i) == 3:
@@ -110,6 +95,15 @@ def check_three(val):
     return three
 
 def check_four(val):
+    '''
+    Check if one hand of cards include four
+
+    Args:
+        val : The ordered value of cards
+
+    Returns:
+        The value of four
+    '''
     four = 0
     for i in range(2, 15):
         if val.count(i) == 4:
@@ -118,6 +112,15 @@ def check_four(val):
     return four
 
 def check_straight(val):
+    '''
+    Check if one hand of cards include straight
+
+    Args:
+        val : The ordered value of cards
+
+    Returns:
+        The high card of straight (if not include straight, return 0)
+    '''
     straight = 0
     check = len(check_pairs(val)) == 0 and check_three(val) == 0 and check_four(val) == 0
     if check:
@@ -127,6 +130,15 @@ def check_straight(val):
     return straight
 
 def check_flush(suit):
+    '''
+    Check if one hand of cards is flush
+
+    Args:
+        suit : The suit of cards
+
+    Returns:
+        The bool indicate if cards is flush
+    '''
     flush = 0
     if len(set(suit)) == 1:
         flush = 1
@@ -134,6 +146,16 @@ def check_flush(suit):
     return flush
 
 def find_pattern(val, suit):
+    '''
+    Determine the pattern of one hand of cards
+
+    Args:
+        val : The ordered value of cards
+        suit : The suit of cards
+
+    Returns:
+        The cards pattern and a cache includes high cards for comparing same pattern cards
+    '''
     pairs = check_pairs(val)
     three = check_three(val)
     four = check_four(val)
@@ -163,9 +185,19 @@ def find_pattern(val, suit):
 
     return cache, pattern
 
-# compare: pattern > value
+# compare: pattern > high card
 
-def high(a, b, a2=0, b2=0, a3=0, b3=0):
+def high(a = int, b = int, a2 = 0, b2 = 0, a3 = 0, b3 = 0):
+    '''
+    Lexicographic preference comparison
+
+    Args:
+        a : The first value to be compared of a
+        b : The first value to be compared of b
+
+    Returns:
+        A bool indicate if a preferred to b
+    '''
     if a > b:
         r = 1
     elif a < b:
@@ -182,6 +214,19 @@ def high(a, b, a2=0, b2=0, a3=0, b3=0):
     return r
 
 def compare_high(a, b, p, v_a, v_b):
+    '''
+    Compare high card for two hands of same pattern cards
+
+    Args:
+        a : The high cards of a
+        b : The high cards of b
+        p : Pattern of cards
+        v_a : The value of a's cards
+        v_b : The value of b's cards
+
+    Returns:
+        A bool indicate if a's cards preferred to b's cards
+    '''
     if p == 1:
         r = high(a[3], b[3])
     elif p == 2:
@@ -214,6 +259,18 @@ def compare_high(a, b, p, v_a, v_b):
     return r
 
 def compare(val_a, suit_a, val_b, suit_b):
+    '''
+    Compare two players' cards
+
+    Args:
+        val_a : The value of a's cards
+        suit_a : The suit of a's cards
+        val_b : The value of b's cards
+        suit_b : The suit of b's cards
+
+    Returns:
+        A bool indicate if a's cards preferred to b's cards (along with high cards and pattern)
+    '''
     cache_a, pattern_a = find_pattern(val_a, suit_a)
     cache_b, pattern_b = find_pattern(val_b, suit_b)
     if pattern_a < pattern_b:
@@ -228,6 +285,15 @@ def compare(val_a, suit_a, val_b, suit_b):
 # do a loop for 1000 hands
 
 def main(hands):
+    '''
+    Compare two players' cards en masse
+
+    Args:
+        hands : A dataset includes two players cards
+
+    Returns:
+        The number of times when player a wins
+    '''
     a_win = 0
     for i in range(0, len(hands)):
         val_a, suit_a = arrang_card(hands[i:(i + 1)], "a")
@@ -247,6 +313,16 @@ print(main(hands))
 # ********************** 85_counting_rectangles **********************
 
 def counting_rect(n, m):
+    '''
+    Counting the number of sub-rectangles in a given rectangle
+
+    Args:
+        n : The length of rectangle
+        m : The width of rectangle
+
+    Returns:
+        The number of sub-rectangles
+    '''
     rect = np.zeros([n, m])
     for i in range(0, n):
         for j in range(0, m):
@@ -274,3 +350,73 @@ min_idx = diff.argmin(axis = 0)
 near_2e6[min_idx:min_idx + 1]
 
 # reference:https://www.mathblog.dk/project-euler-85-rectangles-rectangular-grid/
+
+
+
+
+
+# ********************** 100_arranged_probability **********************
+
+def find_arr(start = int):
+    '''
+    Find the arrangement of discs whose P(BB) = 1/2 by trial one-by-one from start
+
+    Args:
+        start (int): The number over which to find the next arrangement
+
+    Returns:
+        The total number of discs and the number of blue discs
+    '''
+    N = math.floor(start)
+    n = math.floor(0.7 * N)
+    t1 = 0
+    t2 = 0
+    while 2 * n * (n - 1) != N * (N - 1):
+        if 2 * n * (n - 1) < N * (N - 1):
+            n = n + 1
+            t1 = t1 + 1
+        else:
+            N = N + 1
+            t2 = t2 + 1
+
+    t = t1 + t2
+
+    print("iterate", t1, "+", t2, "=", t, "times")
+
+    return N, n
+
+def find_arr2(start = int):
+    '''
+    Find the arrangement of discs whose P(BB) = 1/2 by recursive function
+
+    Args:
+        start (int): The number over which to find the next arrangement
+
+    Returns:
+        The total number of discs and the number of blue discs
+    '''
+    N = 21
+    n = 15
+    t = 0
+    while N < start:
+        N_temp = N
+        n_temp = n
+        N = 4 * n_temp + 3 * N_temp - 3
+        n = 3 * n_temp + 2 * N_temp - 2
+        t = t + 1
+
+    print("iterate", t, "times")
+
+    return N, n
+
+print(find_arr(1e2))
+print(find_arr(1e4))
+print(find_arr(1e6))
+
+print(find_arr2(1e2))
+print(find_arr2(1e4))
+print(find_arr2(1e6))
+
+print(find_arr2(1e12))
+
+# reference: https://www.mathblog.dk/project-euler-100-blue-discs-two-blue/
